@@ -1,13 +1,14 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
+// #include <EasyAsyncTCP.h> for esp8266
 #include <driver/rtc_io.h>
 #include <ESPAsyncWebServer.h>
 #include "SPIFFS.h"
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-const char * ssid = "kk66036+";
-const char * password = "29372F733EE5";
+const char *ssid = "kk66036+";
+const char *password = "29372F733EE5";
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
@@ -206,7 +207,8 @@ const char settings_html[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
-void notFound(AsyncWebServerRequest *request) {
+void notFound(AsyncWebServerRequest *request)
+{
   request->send(404, "text/plain", "Not found");
 }
 
@@ -230,7 +232,8 @@ void setup()
   Serial.println(ssid);
 
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -240,37 +243,28 @@ void setup()
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send_P(200, "text/html", index_html); });
 
+  server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(404, "text/html", settings_html); });
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", index_html);
-  });
-
-  server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(404, "text/html", settings_html);
-  });
-
-  server.on("/testmotor", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", settings_html);
-    Serial.println("Motor Test Requested");
-    // Test motor
-  });
-
-  server.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
     request->send_P(200, "text/html", settings_html);
     Serial.println("Restart Requested");
     delay(500);
-    ESP.restart();
-  });
+    ESP.restart(); });
 
-  server.on("/deepsleep", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/deepsleep", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
     request->send_P(200, "text/html", settings_html);
     Serial.println("Deep Sleep Requested");
     delay(500);
-    esp_deep_sleep_start();
-  });
+    esp_deep_sleep_start(); });
 
-  server.on("/putsettings", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/putsettings", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
     if (request->hasParam("deeptimeout")) {
       String input = request->getParam("deeptimeout")->value();
       deeptimeout = atoi(input.c_str());
@@ -302,65 +296,72 @@ void setup()
     pinMode(neckgpio, INPUT_PULLUP);
     pinMode(wakeupgpio, INPUT_PULLUP);
 
-    request->send(200, "text/html", settings_html);
-  });
+    request->send(200, "text/html", settings_html); });
 
-  server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
     File root = SPIFFS.open("/");
     //request->send(404, "text/plain", "Not implemented");
     File file = root.openNextFile();
     while(file) {
       file = root.openNextFile();
       Serial.println(file.name());
-    }
-  });
+    } });
 
   server.onNotFound(notFound);
   server.begin();
 
   SPIFFS.begin(true);
 
-  rtc_gpio_pulldown_en((gpio_num_t) wakeupgpio);
-  esp_sleep_enable_ext0_wakeup((gpio_num_t) wakeupgpio, RISING);
+  rtc_gpio_pulldown_en((gpio_num_t)wakeupgpio);
+  esp_sleep_enable_ext0_wakeup((gpio_num_t)wakeupgpio, RISING);
 }
 
 WiFiUDP udp;
-const char * udpAddress = "192.168.56.1";
+const char *udpAddress = "192.168.0.12";
 long lastActivity = millis();
 
-void loop() {
+void loop()
+{
   Serial.println("Pinged");
   udp.beginPacket(udpAddress, 8080);
   uint8_t ping[50] = "ping";
-  udp.write(ping,4);
+  udp.write(ping, 4);
   udp.endPacket();
 
-  if(digitalRead(wakeupgpio) == 0) {
-     if (digitalRead(lowerbackgpio) == 1 && digitalRead(neckgpio) == 1) {
+  if (digitalRead(wakeupgpio) == 0)
+  {
+    if (digitalRead(lowerbackgpio) == 1 && digitalRead(neckgpio) == 1)
+    {
       Serial.println("\tBoth");
       udp.beginPacket(udpAddress, 8080);
       uint8_t both[50] = "both";
-      udp.write(both,4);
+      udp.write(both, 4);
       udp.endPacket();
-     }else if(digitalRead(lowerbackgpio) == 1){
+    }
+    else if (digitalRead(lowerbackgpio) == 1)
+    {
       Serial.println("\tLower");
       udp.beginPacket(udpAddress, 8080);
       uint8_t low[50] = "low";
-      udp.write(low,3);
+      udp.write(low, 3);
       udp.endPacket();
-     }else if(digitalRead(neckgpio) == 1){
+    }
+    else if (digitalRead(neckgpio) == 1)
+    {
       Serial.println("\tTop");
       udp.beginPacket(udpAddress, 8080);
       uint8_t top[50] = "top";
-      udp.write(top,3);
+      udp.write(top, 3);
       udp.endPacket();
-     }
+    }
   }
-  if(millis() - lastActivity >= deeptimeout) {
+  if (millis() - lastActivity >= deeptimeout)
+  {
     Serial.println("\tSleep");
     udp.beginPacket(udpAddress, 8080);
     uint8_t sleep[50] = "sleep";
-    udp.write(sleep,5);
+    udp.write(sleep, 5);
     udp.endPacket();
     delay(500);
     esp_deep_sleep_start();
