@@ -31,6 +31,7 @@ namespace ESPPosture
         }
 
         private long previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        private Boolean moved = false;
         private void serverThread()
         {
             int port;
@@ -67,20 +68,35 @@ namespace ESPPosture
                     {
                         if (data.ToString().Equals("top"))
                         {
-                            SendNotif("Alerting: Head");
+                            SendTop();
+                            moved = false;
                         }
                         else if (data.ToString().Equals("low"))
                         {
-                            SendNotif("Alerting: Back");
+                            SendBack();
+                            moved = false;
                         }
                         else if (data.ToString().Equals("both"))
                         {
-                            SendNotif("Alerting: Head and Back");
+                            SendBoth();
+                            moved = false;
                         }
                     }
                     if (data.ToString().Equals("sleep"))
                     {
-                        SendNotif("ESP has gone to sleep...");
+                        SendSleep();
+                    }
+                    else if (data.ToString().Equals("test"))
+                    {
+                        SendTest();
+                    }
+                    else if (data.ToString().Equals("move"))
+                    {
+                        if (!moved)
+                        {
+                            SendMove();
+                        }
+                        moved = true;
                     }
 
                 }
@@ -88,15 +104,68 @@ namespace ESPPosture
             }
         }
 
-        private void SendNotif(string str)
+        private void SendTop()
         {
             this.Invoke(new MethodInvoker(delegate ()
             {
-                notifyIcon.Icon = new Icon(Path.GetFullPath("ESPPosture.ico"));
-                notifyIcon.Visible = true;
-                notifyIcon.BalloonTipTitle = "ESP Posture Chair";
-                notifyIcon.BalloonTipText = str;
-                notifyIcon.ShowBalloonTip(100);
+                notifyTop.Icon = new Icon(Path.GetFullPath("ESPPosture.ico"));
+                notifyTop.Visible = true;
+                notifyTop.ShowBalloonTip(0);
+                previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            }));
+        }
+
+        private void SendBack()
+        {
+            this.Invoke(new MethodInvoker(delegate ()
+            {
+                notifyBack.Icon = new Icon(Path.GetFullPath("ESPPosture.ico"));
+                notifyBack.Visible = true;
+                notifyBack.ShowBalloonTip(0);
+                previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            }));
+        }
+
+        private void SendBoth()
+        {
+            this.Invoke(new MethodInvoker(delegate ()
+            {
+                notifyBoth.Icon = new Icon(Path.GetFullPath("ESPPosture.ico"));
+                notifyBoth.Visible = true;
+                notifyBoth.ShowBalloonTip(0);
+                previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            }));
+        }
+
+        private void SendSleep()
+        {
+            this.Invoke(new MethodInvoker(delegate ()
+            {
+                notifySleep.Icon = new Icon(Path.GetFullPath("ESPPosture.ico"));
+                notifySleep.Visible = true;
+                notifySleep.ShowBalloonTip(0);
+                previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            }));
+        }
+
+        private void SendTest()
+        {
+            this.Invoke(new MethodInvoker(delegate ()
+            {
+                notifyTest.Icon = new Icon(Path.GetFullPath("ESPPosture.ico"));
+                notifyTest.Visible = true;
+                notifyTest.ShowBalloonTip(0);
+                previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            }));
+        }
+
+        private void SendMove()
+        {
+            this.Invoke(new MethodInvoker(delegate ()
+            {
+                notifyMove.Icon = new Icon(Path.GetFullPath("ESPPosture.ico"));
+                notifyMove.Visible = true;
+                notifyMove.ShowBalloonTip(0);
                 previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             }));
         }

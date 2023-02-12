@@ -34,7 +34,12 @@
             this.label2 = new System.Windows.Forms.Label();
             this.logs = new System.Windows.Forms.ListBox();
             this.updateBtn = new System.Windows.Forms.Button();
-            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.notifyTop = new System.Windows.Forms.NotifyIcon(this.components);
+            this.notifySleep = new System.Windows.Forms.NotifyIcon(this.components);
+            this.notifyTest = new System.Windows.Forms.NotifyIcon(this.components);
+            this.notifyBack = new System.Windows.Forms.NotifyIcon(this.components);
+            this.notifyMove = new System.Windows.Forms.NotifyIcon(this.components);
+            this.notifyBoth = new System.Windows.Forms.NotifyIcon(this.components);
             this.SuspendLayout();
             // 
             // portBox
@@ -74,9 +79,47 @@
             this.updateBtn.UseVisualStyleBackColor = true;
             this.updateBtn.Click += new System.EventHandler(this.updateBtn_Click);
             // 
-            // notifyIcon
+            // notifyTop
             // 
-            this.notifyIcon.Text = "ESPPostureChair";
+            this.notifyTop.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Warning;
+            this.notifyTop.BalloonTipText = "Alert: Neck";
+            this.notifyTop.BalloonTipTitle = "ESP Posture Chair";
+            this.notifyTop.Text = "ESPPostureChair";
+            // 
+            // notifySleep
+            // 
+            this.notifySleep.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Info;
+            this.notifySleep.BalloonTipText = "ESP has gone to sleep...";
+            this.notifySleep.BalloonTipTitle = "ESP Posture Chair";
+            this.notifySleep.Text = "ESP Posture Chair";
+            // 
+            // notifyTest
+            // 
+            this.notifyTest.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Info;
+            this.notifyTest.BalloonTipText = "ESP has sent a test message...";
+            this.notifyTest.BalloonTipTitle = "ESP Posture Chair";
+            this.notifyTest.Text = "ESP Posture Chair";
+            // 
+            // notifyBack
+            // 
+            this.notifyBack.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Warning;
+            this.notifyBack.BalloonTipText = "Alert: Back";
+            this.notifyBack.BalloonTipTitle = "ESP Posture Chair";
+            this.notifyBack.Text = "ESP Posture Chair";
+            // 
+            // notifyMove
+            // 
+            this.notifyMove.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Info;
+            this.notifyMove.BalloonTipText = "Move detected...";
+            this.notifyMove.BalloonTipTitle = "ESP Posture Chair";
+            this.notifyMove.Text = "ESP Posture Chair";
+            // 
+            // notifyBoth
+            // 
+            this.notifyBoth.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Warning;
+            this.notifyBoth.BalloonTipText = "Alert: Neck and Back";
+            this.notifyBoth.BalloonTipTitle = "ESP Posture Chair";
+            this.notifyBoth.Text = "ESP Posture Chair";
             // 
             // Form
             // 
@@ -103,6 +146,11 @@
         private Label label2;
         private ListBox logs;
         private Button updateBtn;
-        private NotifyIcon notifyIcon;
+        private NotifyIcon notifyTop;
+        private NotifyIcon notifySleep;
+        private NotifyIcon notifyTest;
+        private NotifyIcon notifyBack;
+        private NotifyIcon notifyMove;
+        private NotifyIcon notifyBoth;
     }
 }

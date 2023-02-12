@@ -230,7 +230,7 @@ const char settings_html[] PROGMEM = R"rawliteral(
             <br>
             <b>Daylight Offset (s): </b><input style="width: 5rem;" type="number" name="daylightoffsetsec">
             <br>
-            <b>Deep Sleep Time Out (ms): </b><input type="number" name="deeptimeout">
+            <b>Deep Sleep Time Out (ms): </b><input style="width: 6rem;" type="number" name="deeptimeout">
             <hr>
             <b>Lower Back GPIO: </b><input type="number" min="0" max="50" name="lowerbackgpio">
             <br>
@@ -244,7 +244,7 @@ const char settings_html[] PROGMEM = R"rawliteral(
 </body>
 
 <script>
-    fetch('http://192.168.0.46/raw')
+    fetch('/raw')
         .then(res => res.json())
         .then(out =>
             setData(out))
@@ -373,7 +373,7 @@ void setup()
             {
     Serial.println("Message Requested");
 
-    request->redirect(settings_html);
+    request->redirect("/settings");
     udp.beginPacket(udpAddress.c_str(), udpPort);
     uint8_t both[50] = "test";
     udp.write(both, 4);
@@ -383,7 +383,7 @@ void setup()
             {
     Serial.println("Restart Requested");
 
-    request->redirect(settings_html);
+    request->redirect("/settings");
     delay(500);
     ESP.restart(); });
 
@@ -397,7 +397,7 @@ void setup()
 
   server.on("/putsettings", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    request->redirect(settings_html);
+    request->redirect("/settings");
 
     if (request->hasParam("udpAddress"))
     {
