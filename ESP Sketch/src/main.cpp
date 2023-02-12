@@ -4,11 +4,9 @@
 #include <driver/rtc_io.h>
 #include <ESPAsyncWebServer.h>
 #include "SPIFFS.h"
+#include "time.h"
 #include <WiFi.h>
 #include <WiFiUdp.h>
-
-const char *ssid = "kk66036+";
-const char *password = "29372F733EE5";
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
@@ -102,6 +100,7 @@ const char settings_html[] PROGMEM = R"rawliteral(
         }
 
         button {
+            margin-top: 1rem;
             padding: 12.5px 30px;
             border: 0;
             border-radius: 100px;
@@ -197,7 +196,7 @@ const char settings_html[] PROGMEM = R"rawliteral(
             <br>
             <b>Neck GPIO: </b><input type="number" name="neckgpio">
             <br>
-            <b>Wake-up GPIO: </b><input type="number" name="motorgpio">
+            <b>Wake-up GPIO: </b><input type="number" name="wakeupgpio">
             <br>
             <button type="submit" style="width: 100%; background-color: #2ba8fb;">Submit</button>
         </form>
@@ -207,18 +206,58 @@ const char settings_html[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
-void notFound(AsyncWebServerRequest *request)
-{
-  request->send(404, "text/plain", "Not found");
-}
-
 AsyncWebServer server(80);
+
+const char *ssid = "kk66036+";
+const char *password = "29372F733EE5";
 
 long deeptimeout = 300000;
 int lowerbackgpio = 18;
 int neckgpio = 19;
 int wakeupgpio = 15;
 String logs = "";
+
+const char *ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = -18000;
+const int daylightOffset_sec = -18000;
+
+void notFound(AsyncWebServerRequest *request)
+{
+  request->send(404, "text/plain", "Not found");
+}
+
+String getLocalTime()
+{
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo))
+  {
+    Serial.println("Failed to obtain time");
+    return "Time Unavailable";
+  }
+
+  char timeStringBuff[50];
+  strftime(timeStringBuff, sizeof(timeStringBuff), "%B-%d-%Y-%H:%M:%S", &timeinfo);
+
+  String asString(timeStringBuff);
+  return timeStringBuff;
+}
+
+boolean writeLogs()
+{
+  File file = SPIFFS.open("/" + getLocalTime() + ".txt", FILE_WRITE);
+  logs += "~~~ End Of Logs ~~~\n";
+  if (file.print(logs))
+  {
+    logs = "";
+    file.close();
+    return true;
+  }
+  else
+  {
+    file.close();
+    return false;
+  }
+}
 
 void setup()
 {
@@ -244,21 +283,21 @@ void setup()
   Serial.println(WiFi.localIP());
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send_P(200, "text/html", index_html); });
+            { request->send(200, "text/html", index_html); });
 
   server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(404, "text/html", settings_html); });
+            { request->send(200, "text/html", settings_html); });
 
   server.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    request->send_P(200, "text/html", settings_html);
+    request->redirect(settings_html);
     Serial.println("Restart Requested");
     delay(500);
     ESP.restart(); });
 
   server.on("/deepsleep", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-    request->send_P(200, "text/html", settings_html);
+    request->redirect(settings_html);
     Serial.println("Deep Sleep Requested");
     delay(500);
     esp_deep_sleep_start(); });
@@ -296,16 +335,57 @@ void setup()
     pinMode(neckgpio, INPUT_PULLUP);
     pinMode(wakeupgpio, INPUT_PULLUP);
 
-    request->send(200, "text/html", settings_html); });
+    request->redirect(settings_html); });
 
   server.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request)
             {
     File root = SPIFFS.open("/");
-    //request->send(404, "text/plain", "Not implemented");
     File file = root.openNextFile();
-    while(file) {
-      file = root.openNextFile();
+    String list = "<style>html { font-family: Arial, Helvetica, sans-serif; background: #393939; color: #ffffff; } a { color: #32a8ff } button { padding: 12.5px 30px; border: 0; border-radius: 100px; background-color: #e30f13; color: #ffffff; font-weight: Bold; transition: all 0.5s; -webkit-transition: all 0.5s; } button:hover { background-color: #c72c17; box-shadow: 0 0 20px #c72c1750; } button:active { background-color: #f5233f; transition: all 0.25s; -webkit-transition: all 0.25s; box-shadow: none; }</style>";
+    while(file.available()) {
+      Serial.print("File: ");
       Serial.println(file.name());
+
+      list += "File: <a href=\"./getfile?filename=";
+      list += file.name();
+      list += "\">";
+      list += file.name();
+      list += "</a> | <a href=\"./removefile?filename=";
+      list += file.name();
+      list += "\"><button>Delete</button></a><br>";
+      file = root.openNextFile();
+    }
+
+    list += "~~~ End Of Files ~~~";
+    request->send(200, "text/html", list); });
+
+  server.on("/getfile", HTTP_GET, [](AsyncWebServerRequest *request)
+            { 
+    Serial.println(request->getParam("filename")->value()); 
+    if (request->hasParam("filename")) {
+      String file = request->getParam("filename")->value();
+      File download = SPIFFS.open("/" + file, "r");
+      AsyncWebServerResponse *response = request->beginResponse(200, "text/html", download.readString());
+      
+      response->addHeader("Content-Type", "text/text");
+      response->addHeader("Content-Disposition", "attachment; filename=" + file);
+      download.close();
+      request->send(response);
+    } });
+
+  server.on("/removefile", HTTP_GET, [](AsyncWebServerRequest *request)
+            { 
+    Serial.println(request->getParam("filename")->value()); 
+    if (request->hasParam("filename")) {
+      AsyncWebServerResponse *response = request->beginResponse(200, "text/html", "File not found if not removed...");
+      String file = request->getParam("filename")->value();
+      File remove = SPIFFS.open("/" + file, "r");
+      if (remove.available())
+      {
+        SPIFFS.remove("/" + file);
+        remove.close();
+      }
+      request->redirect("./logs");
     } });
 
   server.onNotFound(notFound);
@@ -313,8 +393,13 @@ void setup()
 
   SPIFFS.begin(true);
 
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   rtc_gpio_pulldown_en((gpio_num_t)wakeupgpio);
   esp_sleep_enable_ext0_wakeup((gpio_num_t)wakeupgpio, RISING);
+
+  Serial.print(getLocalTime());
+  Serial.println(": ESP Booted");
+  logs += getLocalTime() + ": ESP Booted\n";
 }
 
 WiFiUDP udp;
@@ -338,6 +423,8 @@ void loop()
       uint8_t both[50] = "both";
       udp.write(both, 4);
       udp.endPacket();
+
+      logs += getLocalTime() + ": Both\n";
     }
     else if (digitalRead(lowerbackgpio) == 1)
     {
@@ -346,6 +433,8 @@ void loop()
       uint8_t low[50] = "low";
       udp.write(low, 3);
       udp.endPacket();
+
+      logs += getLocalTime() + ": Back\n";
     }
     else if (digitalRead(neckgpio) == 1)
     {
@@ -354,8 +443,23 @@ void loop()
       uint8_t top[50] = "top";
       udp.write(top, 3);
       udp.endPacket();
+
+      logs += getLocalTime() + ": Neck\n";
     }
   }
+  else
+  {
+    logs += getLocalTime() + ": Moved\n";
+  }
+
+  if (strstr(getLocalTime().c_str(), "11:59:59") != NULL)
+  {
+    if (!writeLogs())
+    {
+      logs += "~~~ Write Unsuccessful ~~~\n";
+    }
+  }
+
   if (millis() - lastActivity >= deeptimeout)
   {
     Serial.println("\tSleep");
@@ -363,6 +467,8 @@ void loop()
     uint8_t sleep[50] = "sleep";
     udp.write(sleep, 5);
     udp.endPacket();
+
+    logs += getLocalTime() + ": Deep Sleep\n";
     delay(500);
     esp_deep_sleep_start();
   }
