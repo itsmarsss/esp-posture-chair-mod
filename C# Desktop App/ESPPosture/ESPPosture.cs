@@ -30,6 +30,7 @@ namespace ESPPosture
             updateBtn.PerformClick();
         }
 
+        private long previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         private void serverThread()
         {
             int port;
@@ -58,15 +59,46 @@ namespace ESPPosture
             {
                 try
                 {
-
-                    IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, port);
-                    Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
-                    string data = Encoding.ASCII.GetString(receiveBytes);
-                    AddToLogs(RemoteIpEndPoint.Address.ToString() + " : " + DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss") + " : " + data.ToString());
+                    IPEndPoint iep = new IPEndPoint(IPAddress.Any, port);
+                    Byte[] bytes = udpClient.Receive(ref iep);
+                    string data = Encoding.ASCII.GetString(bytes);
+                    AddToLogs(iep.Address.ToString() + " : " + DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss") + " : " + data.ToString());
+                    if (DateTimeOffset.Now.ToUnixTimeMilliseconds() - previous > 1500)
+                    {
+                        if (data.ToString().Equals("top"))
+                        {
+                            SendNotif("Alerting: Head");
+                        }
+                        else if (data.ToString().Equals("low"))
+                        {
+                            SendNotif("Alerting: Back");
+                        }
+                        else if (data.ToString().Equals("both"))
+                        {
+                            SendNotif("Alerting: Head and Back");
+                        }
+                    }
+                    if (data.ToString().Equals("sleep"))
+                    {
+                        SendNotif("ESP has gone to sleep...");
+                    }
 
                 }
                 catch (Exception e) { }
             }
+        }
+
+        private void SendNotif(string str)
+        {
+            this.Invoke(new MethodInvoker(delegate ()
+            {
+                notifyIcon.Icon = new Icon(Path.GetFullPath("ESPPosture.ico"));
+                notifyIcon.Visible = true;
+                notifyIcon.BalloonTipTitle = "ESP Posture Chair";
+                notifyIcon.BalloonTipText = str;
+                notifyIcon.ShowBalloonTip(100);
+                previous = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            }));
         }
 
         private void AddToLogs(string str)

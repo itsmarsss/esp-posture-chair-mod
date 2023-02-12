@@ -28,11 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form));
             this.portBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.logs = new System.Windows.Forms.ListBox();
             this.updateBtn = new System.Windows.Forms.Button();
+            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.SuspendLayout();
             // 
             // portBox
@@ -72,6 +74,10 @@
             this.updateBtn.UseVisualStyleBackColor = true;
             this.updateBtn.Click += new System.EventHandler(this.updateBtn_Click);
             // 
+            // notifyIcon
+            // 
+            this.notifyIcon.Text = "ESPPostureChair";
+            // 
             // Form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(15F, 37F);
@@ -97,5 +103,6 @@
         private Label label2;
         private ListBox logs;
         private Button updateBtn;
+        private NotifyIcon notifyIcon;
     }
 }
