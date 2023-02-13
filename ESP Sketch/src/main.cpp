@@ -190,6 +190,18 @@ const char settings_html[] PROGMEM = R"rawliteral(
                 0 0 13px #3399FF,
                 0 0 18px #3399FF;
         }
+
+        .fixed {
+            position: fixed;
+            left: 0%;
+            bottom: 0%;
+            padding: 1rem;
+        }
+
+        .menu {
+            padding: 10px;
+            filter: brightness(75%);
+        }
     </style>
 </head>
 
@@ -240,6 +252,9 @@ const char settings_html[] PROGMEM = R"rawliteral(
             <br>
             <button class="submit" type="submit" style="width: 100%; background-color: #2ba8fb;">Submit</button>
         </form>
+    </div>
+    <div class="fixed">
+        <a href="/"><button class="menu">Menu</button></a>
     </div>
 </body>
 
@@ -448,6 +463,9 @@ void setup()
     pinMode(lowerbackgpio, INPUT_PULLUP);
     pinMode(neckgpio, INPUT_PULLUP);
     pinMode(wakeupgpio, INPUT_PULLUP);
+    
+    rtc_gpio_pulldown_en((gpio_num_t)wakeupgpio);
+    esp_sleep_enable_ext0_wakeup((gpio_num_t)wakeupgpio, RISING);
 
     Serial.println("Settings Update Requested");
     Serial.print("\tUDP Address: ");
@@ -474,8 +492,11 @@ void setup()
     File root = SPIFFS.open("/");
     File file = root.openNextFile();
 
-    String list = "<style>html { font-family: Arial, Helvetica, sans-serif; background: #393939; color: #ffffff; } a { color: #32a8ff } button { padding: 12.5px 30px; margin-top: 1rem; border: 0; border-radius: 100px; background-color: #e30f13; color: #ffffff; font-weight: Bold; transition: all 0.5s; -webkit-transition: all 0.5s; } button:hover { background-color: #c72c17; box-shadow: 0 0 20px #c72c1750; } button:active { background-color: #f5233f; transition: all 0.25s; -webkit-transition: all 0.25s; box-shadow: none; }</style>";
-    
+    String list = "<style>html { font-family: Arial, Helvetica, sans-serif; background: #393939; color: #ffffff; display: grid; place-items: center; } h2, h3 { text-align: center; margin: 0; margin-top: 1rem; padding: 0; } a { color: #32a8ff } .delete { padding: 10px; margin-top: 1rem; border: 0; border-radius: 100px; background-color: #e30f13; color: #ffffff; text-transform: uppercase; letter-spacing: 4px; font-weight: Bold; transition: all 0.5s; -webkit-transition: all 0.5s; } .delete:hover { background-color: #c72c17; box-shadow: 0 0 20px #c72c1750; } .delete:active { background-color: #f5233f; transition: all 0.25s; -webkit-transition: all 0.25s; box-shadow: none; } .save { width: 100%; margin-top: 1rem; padding: 12.5px 30px; border: 0; border-radius: 100px; background-color: #21a0f5; color: #ffffff; text-transform: uppercase; letter-spacing: 4px; font-weight: Bold; transition: all 0.5s; -webkit-transition: all 0.5s; } .save:hover { background-color: #6fc5ff; box-shadow: 0 0 20px #6fc5ff50; } .save:active { background-color: #3d94cf; transition: all 0.25s; -webkit-transition: all 0.25s; box-shadow: none; } .fixed { position: fixed; left: 0%; bottom: 0%; padding: 1rem; } .menu { padding: 10px; filter: brightness(75%); }</style>";
+
+    list += "<h2><b>LOGS:</b></h2>";
+    list += "<div>";
+
     while(file.available()) {
       list += "File: <a href=\"./getfile?filename=";
       list += file.name();
@@ -483,16 +504,31 @@ void setup()
       list += file.name();
       list += "</a> | <a href=\"./removefile?filename=";
       list += file.name();
-      list += "\"><button>Delete</button></a><br>";
+      list += "\"><button class=\"delete\">Delete</button></a><br>";
       file = root.openNextFile();
     }
 
+    list += "</div>";
     list += "<h3><b>~~~ End Of Files ~~~</b></h3>";
+    list += "<a href=\"/savenow\"><button class=\"save\">Save Current Log</button></a>";
+    list += "<div class=\"fixed\"><a href=\"/\"><button class=\"menu save\">Menu</button></a></div>";
+
     request->send(200, "text/html", list); });
+
+  server.on("/savenow", HTTP_GET, [](AsyncWebServerRequest *request)
+            { 
+    Serial.println("Save Current Logs Requested: ");
+
+    if (!writeLogs())
+    {
+      logs += "~~~ Write Unsuccessful ~~~\n";
+    }
+
+    request->redirect("/logs"); });
 
   server.on("/getfile", HTTP_GET, [](AsyncWebServerRequest *request)
             { 
-    Serial.println("File Download Requested: ");
+    Serial.print("File Download Requested: ");
     Serial.println(request->getParam("filename")->value()); 
 
     if (request->hasParam("filename")) {
@@ -510,7 +546,7 @@ void setup()
 
   server.on("/removefile", HTTP_GET, [](AsyncWebServerRequest *request)
             { 
-    Serial.println("File Removal Requested: ");
+    Serial.print("File Removal Requested: ");
     Serial.println(request->getParam("filename")->value()); 
 
     if (request->hasParam("filename")) {
@@ -606,7 +642,7 @@ void loop()
   udp.write(ping, 4);
   udp.endPacket();
 
-  if (digitalRead(wakeupgpio) == 0)
+  if (digitalRead(wakeupgpio) == 1)
   {
     lastActivity = millis();
     if (digitalRead(lowerbackgpio) == 1 && digitalRead(neckgpio) == 1)
