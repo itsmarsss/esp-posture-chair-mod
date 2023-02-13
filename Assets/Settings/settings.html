@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <style>
+        html {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #393939;
+            color: #ffffff;
+        }
+
+        body {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            display: grid;
+            place-items: center;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        button {
+            margin-top: 1rem;
+            padding: 12.5px 30px;
+            border: 0;
+            border-radius: 100px;
+            background-color: #21a0f5;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: Bold;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+        }
+
+        button:hover {
+            background-color: #6fc5ff;
+            box-shadow: 0 0 20px #6fc5ff50;
+        }
+
+        button:active {
+            background-color: #3d94cf;
+            transition: all 0.25s;
+            -webkit-transition: all 0.25s;
+            box-shadow: none;
+        }
+
+        input {
+            background-color: #f5f5f5;
+            color: #242424;
+            padding-bottom: 2px;
+            margin-top: .5rem;
+            margin-bottom: .5rem;
+            min-height: 30px;
+            width: 3rem;
+            border-radius: 4px;
+            outline: none;
+            border: none;
+            line-height: 1.15;
+            box-shadow: 0px 10px 20px -18px;
+        }
+
+        input:focus {
+            padding-bottom: 0px;
+            border-bottom: 2px solid #3d94cf;
+            border-radius: 4px 4px 2px 2px;
+        }
+
+        input:hover {
+            outline: 1px solid lightgrey;
+        }
+
+        .cont {
+            width: 500px;
+            border-radius: 50px;
+            background-color: #252525;
+            border-width: 2px;
+            padding: 2rem;
+            padding-top: 0.25rem;
+            margin-top: 4rem;
+            box-shadow: 15px 15px 30px #202020,
+                -15px -15px 30px #555555;
+            transition: 200ms;
+        }
+
+        h2 {
+            margin-bottom: 0;
+        }
+
+
+        .submit {
+            padding: 10px 20px;
+            border: none;
+            font-size: 17px;
+            color: #ffffff;
+            border-radius: 7px;
+            font-weight: 700;
+            transition: 0.5s;
+        }
+
+        .submit {
+            background: #3399FF;
+            box-shadow: 0 0 12px #3399FF;
+        }
+
+        .submit:hover {
+            box-shadow: 0 0 5px #3399FF,
+                0 0 6px #3399FF,
+                0 0 13px #3399FF,
+                0 0 18px #3399FF;
+        }
+
+        .fixed {
+            position: fixed;
+            left: 0%;
+            bottom: 0%;
+            padding: 1rem;
+        }
+
+        .menu {
+            padding: 10px;
+            filter: brightness(75%);
+        }
+    </style>
+</head>
+
+<body>
+    <div><a href="./testmessage">
+            <button>
+                Test Message
+            </button>
+        </a>
+        <a href="./restart">
+            <button style="margin-left: 1rem; margin-right: 1rem;">
+                Restart
+            </button>
+        </a>
+        <a href="./deepsleep">
+            <button>
+                Deep Sleep
+            </button>
+        </a>
+    </div>
+
+    <div class="cont">
+        <form action="/putsettings">
+            <h2>Settings</h2>
+            <br>
+            <b>SSID: </b><input style="width: 7rem;" type="text" name="ssid">
+            <br>
+            <b>Password: </b><input style="width: 7rem;" type="password" name="password">
+            <hr>
+            <b>UDP Address <i>(xxx.xxx.xxx.xxx)</i>: </b><input style="width: 7rem;" type="text" minlength="7"
+                maxlength="15" size="15"
+                pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$" name="udpAddress">
+            <br>
+            <b>UDP Port <i>(0 - 65536)</i>: </b><input style="width: 5rem;" type="number" min="0" max="65536"
+                name="udpPort">
+            <hr>
+            <b>GMT Offset (s): </b><input style="width: 5rem;" type="number" name="gmtoffsetsec">
+            <br>
+            <b>Daylight Offset (s): </b><input style="width: 5rem;" type="number" name="daylightoffsetsec">
+            <br>
+            <b>Deep Sleep Time Out (ms): </b><input style="width: 6rem;" type="number" name="deeptimeout">
+            <hr>
+            <b>Lower Back GPIO: </b><input type="number" min="0" max="50" name="lowerbackgpio">
+            <br>
+            <b>Neck GPIO: </b><input type="number" min="0" max="50" name="neckgpio">
+            <br>
+            <b>Wake-up GPIO: </b><input type="number" min="0" max="50" name="wakeupgpio">
+            <br>
+            <button class="submit" type="submit" style="width: 100%; background-color: #2ba8fb;">Submit</button>
+        </form>
+    </div>
+    <div class="fixed">
+        <a href="/"><button class="menu">Menu</button></a>
+    </div>
+</body>
+
+<script>
+    fetch('/raw')
+        .then(res => res.json())
+        .then(out =>
+            setData(out))
+        .catch(err => {
+            throw err;
+            console.log('Error querying json');
+            alert('Error getting settings... Please reload');
+        });
+
+    function setData(out) {
+        document.getElementsByName("ssid")[0].value = out.SSID;
+        document.getElementsByName("password")[0].value = out.Password;
+
+        document.getElementsByName("udpAddress")[0].value = out.UDPAddress;
+        document.getElementsByName("udpPort")[0].value = out.UDPPort;
+
+        document.getElementsByName("gmtoffsetsec")[0].value = out.GMTOffset;
+        document.getElementsByName("daylightoffsetsec")[0].value = out.DaylightOffset;
+        document.getElementsByName("deeptimeout")[0].value = out.DeepSleepTimeOut;
+
+        document.getElementsByName("lowerbackgpio")[0].value = out.LowerBackGPIO;
+        document.getElementsByName("neckgpio")[0].value = out.NeckGPIO;
+        document.getElementsByName("wakeupgpio")[0].value = out.WakeUpGPIO;
+    }
+</script>
+
+</html>
