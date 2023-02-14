@@ -259,14 +259,14 @@ const char settings_html[] PROGMEM = R"rawliteral(
 </body>
 
 <script>
-    fetch('/raw')
+    fetch('/rawsettings')
         .then(res => res.json())
         .then(out =>
             setData(out))
         .catch(err => {
-            throw err;
             console.log('Error querying json');
             alert('Error getting settings... Please reload');
+            throw err;
         });
 
     function setData(out) {
@@ -283,6 +283,146 @@ const char settings_html[] PROGMEM = R"rawliteral(
         document.getElementsByName("lowerbackgpio")[0].value = out.LowerBackGPIO;
         document.getElementsByName("neckgpio")[0].value = out.NeckGPIO;
         document.getElementsByName("wakeupgpio")[0].value = out.WakeUpGPIO;
+    }
+</script>
+
+</html>
+)rawliteral";
+
+const char logs_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <style>
+        html {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #393939;
+            color: #ffffff;
+            display: grid;
+            place-items: center;
+        }
+
+        h2,
+        h3 {
+            text-align: center;
+            margin: 0;
+            margin-top: 1rem;
+            padding: 0;
+        }
+
+        a {
+            color: #32a8ff
+        }
+
+        .delete {
+            padding: 10px;
+            margin-top: 1rem;
+            border: 0;
+            border-radius: 100px;
+            background-color: #e30f13;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: Bold;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+        }
+
+        .delete:hover {
+            background-color: #c72c17;
+            box-shadow: 0 0 20px #c72c1750;
+        }
+
+        .delete:active {
+            background-color: #f5233f;
+            transition: all 0.25s;
+            -webkit-transition: all 0.25s;
+            box-shadow: none;
+        }
+
+        .save {
+            width: 100%;
+            margin-top: 1rem;
+            padding: 12.5px 30px;
+            border: 0;
+            border-radius: 100px;
+            background-color: #21a0f5;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: Bold;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+        }
+
+        .save:hover {
+            background-color: #6fc5ff;
+            box-shadow: 0 0 20px #6fc5ff50;
+        }
+
+        .save:active {
+            background-color: #3d94cf;
+            transition: all 0.25s;
+            -webkit-transition: all 0.25s;
+            box-shadow: none;
+        }
+
+        .fixed {
+            position: fixed;
+            left: 0%;
+            bottom: 0%;
+            padding: 1rem;
+        }
+
+        .menu {
+            padding: 10px;
+            filter: brightness(75%);
+        }
+    </style>
+</head>
+
+<body>
+    <h2><b>LOGS:</b></h2>
+    <div id="files">
+
+    </div>
+
+    <h3><b>~~~ End Of Files ~~~</b></h3>
+
+    <a href="/savenow">
+        <button class="save">Save Current Log</button>
+    </a>
+
+    <div class="fixed">
+        <a href="/">
+            <button class="menu save">Menu</button>
+        </a>
+    </div>
+</body>
+
+<script>
+    fetch('/rawlogs')
+        .then(res => res.json())
+        .then(out =>
+            setLogs(out))
+        .catch(err => {
+            console.log('Error querying json');
+            alert('Error getting logs... Please reload');
+            throw err;
+        });
+    files = document.getElementById('files');
+    function setLogs(out) {
+        logs = out.LOGS;
+        logs.forEach((log) => {
+            files.innerHTML +=
+                "File: <a href=\"./getfile?filename=" + log + "\">" +
+                log +
+                "</a> | <a href=\"./removefile?filename=" + log + "\">" +
+                "<button class=\"delete\">Delete</button></a><br>";
+        });
     }
 </script>
 
@@ -486,31 +626,7 @@ void setup()
             {
     Serial.println("Logs Requested");
 
-    File root = SPIFFS.open("/");
-    File file = root.openNextFile();
-
-    String list = "<style>html { font-family: Arial, Helvetica, sans-serif; background: #393939; color: #ffffff; display: grid; place-items: center; } h2, h3 { text-align: center; margin: 0; margin-top: 1rem; padding: 0; } a { color: #32a8ff } .delete { padding: 10px; margin-top: 1rem; border: 0; border-radius: 100px; background-color: #e30f13; color: #ffffff; text-transform: uppercase; letter-spacing: 4px; font-weight: Bold; transition: all 0.5s; -webkit-transition: all 0.5s; } .delete:hover { background-color: #c72c17; box-shadow: 0 0 20px #c72c1750; } .delete:active { background-color: #f5233f; transition: all 0.25s; -webkit-transition: all 0.25s; box-shadow: none; } .save { width: 100%; margin-top: 1rem; padding: 12.5px 30px; border: 0; border-radius: 100px; background-color: #21a0f5; color: #ffffff; text-transform: uppercase; letter-spacing: 4px; font-weight: Bold; transition: all 0.5s; -webkit-transition: all 0.5s; } .save:hover { background-color: #6fc5ff; box-shadow: 0 0 20px #6fc5ff50; } .save:active { background-color: #3d94cf; transition: all 0.25s; -webkit-transition: all 0.25s; box-shadow: none; } .fixed { position: fixed; left: 0%; bottom: 0%; padding: 1rem; } .menu { padding: 10px; filter: brightness(75%); }</style>";
-
-    list += "<h2><b>LOGS:</b></h2>";
-    list += "<div>";
-
-    while(file.available()) {
-      list += "File: <a href=\"./getfile?filename=";
-      list += file.name();
-      list += "\">";
-      list += file.name();
-      list += "</a> | <a href=\"./removefile?filename=";
-      list += file.name();
-      list += "\"><button class=\"delete\">Delete</button></a><br>";
-      file = root.openNextFile();
-    }
-
-    list += "</div>";
-    list += "<h3><b>~~~ End Of Files ~~~</b></h3>";
-    list += "<a href=\"/savenow\"><button class=\"save\">Save Current Log</button></a>";
-    list += "<div class=\"fixed\"><a href=\"/\"><button class=\"menu save\">Menu</button></a></div>";
-
-    request->send(200, "text/html", list); });
+    request->send(200, "text/html", logs_html); });
 
   server.on("/savenow", HTTP_GET, [](AsyncWebServerRequest *request)
             { 
@@ -561,7 +677,7 @@ void setup()
       request->redirect("./logs");
     } });
 
-  server.on("/raw", HTTP_GET, [](AsyncWebServerRequest *request)
+  server.on("/rawsettings", HTTP_GET, [](AsyncWebServerRequest *request)
             {
               String rawSettings = "{\n\"SSID\" : \"";
               rawSettings += ssid;
@@ -606,6 +722,35 @@ void setup()
               rawSettings += "\n}";
 
               AsyncWebServerResponse *response = request->beginResponse(200, "json", rawSettings);
+
+              response->addHeader("Access-Control-Allow-Origin", "*");
+              response->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT");
+              response->addHeader("Access-Control-Allow-Headers", "Content-Type");
+
+              request->send(response); });
+
+  server.on("/rawlogs", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+              File root = SPIFFS.open("/");
+              File file = root.openNextFile();
+
+              String rawLogs = "{\"LOGS\":[";
+
+              while (file.available())
+              {
+                rawLogs += "\"";
+                rawLogs += file.name();
+                rawLogs += "\"";
+                file = root.openNextFile();
+                if (file.available())
+                {
+                  rawLogs += ",";
+                }
+              }
+
+              rawLogs += "]}";
+
+              AsyncWebServerResponse *response = request->beginResponse(200, "json", rawLogs);
 
               response->addHeader("Access-Control-Allow-Origin", "*");
               response->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT");
@@ -695,10 +840,6 @@ void loop()
     }
   }
 
-  Serial.print("\t\t");
-  Serial.print(deeptimeout - (millis() - lastActivity));
-  Serial.println(" ms until sleep");
-
   if (millis() - lastActivity >= deeptimeout)
   {
     Serial.println("\tSleep");
@@ -718,6 +859,10 @@ void loop()
     delay(500);
     esp_deep_sleep_start();
   }
+
+  Serial.print("\t\t");
+  Serial.print(deeptimeout - (millis() - lastActivity));
+  Serial.println(" ms until sleep");
 
   delay(1000);
 }

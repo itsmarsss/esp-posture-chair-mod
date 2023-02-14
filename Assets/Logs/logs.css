@@ -1,0 +1,119 @@
+html {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #393939;
+    color: #ffffff;
+}
+
+body {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    display: grid;
+    place-items: center;
+}
+
+a {
+    text-decoration: none;
+}
+
+button {
+    margin-top: 1rem;
+    padding: 12.5px 30px;
+    border: 0;
+    border-radius: 100px;
+    background-color: #21a0f5;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-weight: Bold;
+    transition: all 0.5s;
+    -webkit-transition: all 0.5s;
+}
+
+button:hover {
+    background-color: #6fc5ff;
+    box-shadow: 0 0 20px #6fc5ff50;
+}
+
+button:active {
+    background-color: #3d94cf;
+    transition: all 0.25s;
+    -webkit-transition: all 0.25s;
+    box-shadow: none;
+}
+
+input {
+    background-color: #f5f5f5;
+    color: #242424;
+    padding-bottom: 2px;
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+    min-height: 30px;
+    width: 3rem;
+    border-radius: 4px;
+    outline: none;
+    border: none;
+    line-height: 1.15;
+    box-shadow: 0px 10px 20px -18px;
+}
+
+input:focus {
+    padding-bottom: 0px;
+    border-bottom: 2px solid #3d94cf;
+    border-radius: 4px 4px 2px 2px;
+}
+
+input:hover {
+    outline: 1px solid lightgrey;
+}
+
+.cont {
+    width: 500px;
+    border-radius: 50px;
+    background-color: #252525;
+    border-width: 2px;
+    padding: 2rem;
+    padding-top: 0.25rem;
+    margin-top: 4rem;
+    box-shadow: 15px 15px 30px #202020,
+        -15px -15px 30px #555555;
+    transition: 200ms;
+}
+
+h2 {
+    margin-bottom: 0;
+}
+
+
+.submit {
+    padding: 10px 20px;
+    border: none;
+    font-size: 17px;
+    color: #ffffff;
+    border-radius: 7px;
+    font-weight: 700;
+    transition: 0.5s;
+}
+
+.submit {
+    background: #3399FF;
+    box-shadow: 0 0 12px #3399FF;
+}
+
+.submit:hover {
+    box-shadow: 0 0 5px #3399FF,
+        0 0 6px #3399FF,
+        0 0 13px #3399FF,
+        0 0 18px #3399FF;
+}
+
+.fixed {
+    position: fixed;
+    left: 0%;
+    bottom: 0%;
+    padding: 1rem;
+}
+
+.menu {
+    padding: 10px;
+    filter: brightness(75%);
+}

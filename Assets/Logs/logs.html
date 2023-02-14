@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <style>
+        html {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #393939;
+            color: #ffffff;
+            display: grid;
+            place-items: center;
+        }
+
+        h2,
+        h3 {
+            text-align: center;
+            margin: 0;
+            margin-top: 1rem;
+            padding: 0;
+        }
+
+        a {
+            color: #32a8ff
+        }
+
+        .delete {
+            padding: 10px;
+            margin-top: 1rem;
+            border: 0;
+            border-radius: 100px;
+            background-color: #e30f13;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: Bold;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+        }
+
+        .delete:hover {
+            background-color: #c72c17;
+            box-shadow: 0 0 20px #c72c1750;
+        }
+
+        .delete:active {
+            background-color: #f5233f;
+            transition: all 0.25s;
+            -webkit-transition: all 0.25s;
+            box-shadow: none;
+        }
+
+        .save {
+            width: 100%;
+            margin-top: 1rem;
+            padding: 12.5px 30px;
+            border: 0;
+            border-radius: 100px;
+            background-color: #21a0f5;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: Bold;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+        }
+
+        .save:hover {
+            background-color: #6fc5ff;
+            box-shadow: 0 0 20px #6fc5ff50;
+        }
+
+        .save:active {
+            background-color: #3d94cf;
+            transition: all 0.25s;
+            -webkit-transition: all 0.25s;
+            box-shadow: none;
+        }
+
+        .fixed {
+            position: fixed;
+            left: 0%;
+            bottom: 0%;
+            padding: 1rem;
+        }
+
+        .menu {
+            padding: 10px;
+            filter: brightness(75%);
+        }
+    </style>
+</head>
+
+<body>
+    <h2><b>LOGS:</b></h2>
+    <div id="files">
+
+    </div>
+
+    <h3><b>~~~ End Of Files ~~~</b></h3>
+
+    <a href="/savenow">
+        <button class="save">Save Current Log</button>
+    </a>
+
+    <div class="fixed">
+        <a href="/">
+            <button class="menu save">Menu</button>
+        </a>
+    </div>
+</body>
+
+<script>
+    fetch('/rawlogs')
+        .then(res => res.json())
+        .then(out =>
+            setLogs(out))
+        .catch(err => {
+            console.log('Error querying json');
+            alert('Error getting logs... Please reload');
+            throw err;
+        });
+    files = document.getElementById('files');
+    function setLogs(out) {
+        logs = out.LOGS;
+        logs.forEach((log) => {
+            files.innerHTML +=
+                "File: <a href=\"./getfile?filename=" + log + "\">" +
+                log +
+                "</a> | <a href=\"./removefile?filename=" + log + "\">" +
+                "<button class=\"delete\">Delete</button></a><br>";
+        });
+    }
+</script>
+
+</html>
