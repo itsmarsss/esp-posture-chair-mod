@@ -463,9 +463,6 @@ void setup()
     pinMode(lowerbackgpio, INPUT_PULLUP);
     pinMode(neckgpio, INPUT_PULLUP);
     pinMode(wakeupgpio, INPUT_PULLUP);
-    
-    rtc_gpio_pulldown_en((gpio_num_t)wakeupgpio);
-    esp_sleep_enable_ext0_wakeup((gpio_num_t)wakeupgpio, RISING);
 
     Serial.println("Settings Update Requested");
     Serial.print("\tUDP Address: ");
@@ -698,6 +695,10 @@ void loop()
     }
   }
 
+  Serial.print("\t\t");
+  Serial.print(deeptimeout - (millis() - lastActivity));
+  Serial.println(" ms until sleep");
+
   if (millis() - lastActivity >= deeptimeout)
   {
     Serial.println("\tSleep");
@@ -708,6 +709,12 @@ void loop()
     udp.endPacket();
 
     logs += getLocalTime() + ": Deep Sleep\n";
+
+    if (!writeLogs())
+    {
+      logs += "~~~ Write Unsuccessful ~~~\n";
+    }
+
     delay(500);
     esp_deep_sleep_start();
   }
