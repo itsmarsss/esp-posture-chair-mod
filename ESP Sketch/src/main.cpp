@@ -431,11 +431,11 @@ const char logs_html[] PROGMEM = R"rawliteral(
 
 AsyncWebServer server(80);
 
-const char *ssid = "kk66036+";
-const char *password = "29372F733EE5";
+const char *ssid = "YOUR_SSID";
+const char *password = "YOUR_PASSWORD";
 
 WiFiUDP udp;
-String udpAddress = "192.168.0.12";
+String udpAddress = "YOUR_ADDRESS";
 int udpPort = 8080;
 
 long deeptimeout = 300000;
